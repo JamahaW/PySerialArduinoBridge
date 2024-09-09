@@ -76,7 +76,9 @@ def main() -> None:
     sleep(2)
 
     arduino.digitalWrite(LED_BUILTIN, 1)
-    print(arduino.digitalRead(LED_BUILTIN))
+    arduino.delay(1000)
+    arduino.digitalWrite(LED_BUILTIN, 0)
+    arduino.delay(1000)
 
     arduino.serial.close()
 
