@@ -15,19 +15,25 @@ class Primitives(Enum):
     """Примитивные типы"""
 
     i8 = Struct("b")
+    """int8_t"""
     u8 = Struct("B")
-
+    """uint8_t"""
     i16 = Struct("h")
+    """int16_t"""
     u16 = Struct("H")
-
+    """uint16_t"""
     i32 = Struct("l")
+    """int32_t"""
     u32 = Struct("L")
-
+    """uint32_t"""
     i64 = Struct("q")
+    """int64_t"""
     I64 = Struct("Q")
-
+    """unt64_t"""
     f32 = Struct("f")
+    """float"""
     f64 = Struct("d")  # ! Не поддерживается на Arduino
+    """double"""
 
     def pack(self, value: bool | int | float) -> bytes:
         return self.value.pack(value)
@@ -37,49 +43,71 @@ class Primitives(Enum):
 
 
 class Command:
+    """
+    Команда по порту
+
+    Имеет свой код (Должен совпадать на slave устройстве)
+    Сигнатуру аргументов (Должна совпадать на устройстве)
+    """
+
     def __init__(self, code: int, signature: tuple[Primitives, ...]) -> None:
-        self.__header: Final[bytes] = Primitives.u8.pack(code)
-        self.__signature = signature
+        self.header: Final[bytes] = Primitives.u8.pack(code)
+        self.signature = signature
 
     def pack(self, *args) -> bytes:
-        return self.__header + b"".join(primitive.pack(arg) for primitive, arg in zip(self.__signature, args))
+        """
+        Скомпилировать команду в набор байт
+        :param args: аргументы команды. (Их столько же, и такого же типа, что и сигнатура команды)
+        :return:
+        """
+        return self.header + b"".join(primitive.pack(arg) for primitive, arg in zip(self.signature, args))
 
 
 class ArduinoConnection:
+    """Пример подключения к Arduino с минимальным набором команд"""
 
     def __init__(self, serial: Serial) -> None:
         self.serial = serial
 
-        self.__pin_mode = Command(0x10, (Primitives.u8, Primitives.u8))
-        self.__digital_write = Command(0x11, (Primitives.u8, Primitives.u8))
-        self.__digital_read = Command(0x12, (Primitives.u8,))
-        self.__delay_ms = Command(0x13, (Primitives.u32,))
+        # Команды этого устройства
+        self._pin_mode = Command(0x10, (Primitives.u8, Primitives.u8))
+        self._digital_write = Command(0x11, (Primitives.u8, Primitives.u8))
+        self._digital_read = Command(0x12, (Primitives.u8,))
+        self._delay_ms = Command(0x13, (Primitives.u32,))
+
+    # Обёртки над командами ниже, чтобы сразу компилировать и отправлять их в порт
 
     def pinMode(self, pin: int, mode: int) -> None:
-        self.serial.write(self.__pin_mode.pack(pin, mode))
+        self.serial.write(self._pin_mode.pack(pin, mode))
 
     def digitalWrite(self, pin: int, state: bool | int) -> None:
-        self.serial.write(self.__digital_write.pack(pin, state))
+        self.serial.write(self._digital_write.pack(pin, state))
 
     def digitalRead(self, pin: int) -> bool:
-        self.serial.write(self.__digital_read.pack(pin))
-        return Primitives.u8.unpack(self.serial.read())
+        self.serial.write(self._digital_read.pack(pin))  # Отправляем запрос для чтения пина
+        response = self.serial.read()  # Ждём и получаем ответ (bytes)
+        return Primitives.u8.unpack(response)  # получаем распакованное значение
 
     def delay(self, milliseconds: int) -> None:
-        self.serial.write(self.__delay_ms.pack(milliseconds))
+        self.serial.write(self._delay_ms.pack(milliseconds))
+        # Код будет спать вместе с Arduino
         sleep(0.001 * milliseconds)
 
 
 def main() -> None:
-    arduino = ArduinoConnection(Serial("COM10", 115200, timeout=10))
+    # Подключение к Arduino, скорость повышенная
+    arduino = ArduinoConnection(Serial("COM10", 115200))
 
+    # Ожидание пока вся инициализация slave платы пройдёт ...
     sleep(2)
 
+    # Стандартный блинк
     arduino.digitalWrite(LED_BUILTIN, 1)
     arduino.delay(1000)
     arduino.digitalWrite(LED_BUILTIN, 0)
     arduino.delay(1000)
 
+    # Закрытие порта
     arduino.serial.close()
 
 
