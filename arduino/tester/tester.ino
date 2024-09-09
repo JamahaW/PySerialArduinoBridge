@@ -32,7 +32,7 @@ void on_di_write() {
 }
 
 void on_DIGITAL_READ() {
-  wait_bytes(2);
+  wait_bytes(1);
   uint8_t pin = Serial.read();
   uint8_t state = digitalRead(pin);
   Serial.write(state);
