@@ -1,6 +1,7 @@
 from enum import Enum
 from struct import Struct
 from time import sleep
+from timeit import timeit
 from typing import Final
 
 from serial import Serial
@@ -29,7 +30,7 @@ class Primitives(Enum):
     i64 = Struct("q")
     """int64_t"""
     I64 = Struct("Q")
-    """unt64_t"""
+    """uint64_t"""
     f32 = Struct("f")
     """float"""
     f64 = Struct("d")  # ! Не поддерживается на Arduino
@@ -61,6 +62,20 @@ class Command:
         :return:
         """
         return self.header + b"".join(primitive.pack(arg) for primitive, arg in zip(self.signature, args))
+
+
+class CacheableCommand(Command):
+
+    def __init__(self, code: int, signature: tuple[Primitives, ...]):
+        super().__init__(code, signature)
+        self.__cache = dict[tuple, bytes]()
+
+    def pack(self, *args) -> bytes:
+        if (cached_command := self.__cache.get(args)) is not None:
+            return cached_command
+
+        self.__cache[args] = cached_command = super().pack(*args)
+        return cached_command
 
 
 class ArduinoConnection:
@@ -111,5 +126,21 @@ def main() -> None:
     arduino.serial.close()
 
 
+def test() -> None:
+    from random import randint
+
+    cmd = Command(0x69, (Primitives.u8,))
+    h_cmd = CacheableCommand(0x69, (Primitives.u8,))
+
+    def rand():
+        return randint(0, 255)
+
+    pack_no_cache = timeit(lambda: cmd.pack(rand()))
+    pack_cached = timeit(lambda: h_cmd.pack(rand()))
+
+    print(f"{pack_no_cache=}\n{pack_cached=}\n({pack_no_cache / pack_cached})")
+
+
 if __name__ == '__main__':
-    main()
+    # main()
+    test()
