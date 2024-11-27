@@ -1,11 +1,9 @@
 from time import sleep
-from timeit import timeit
 
 from serial import Serial
 
-from pyserialbridge.commands import CacheableCommand
-from pyserialbridge.commands import Command
-from pyserialbridge.primitives import Primitives
+from serialcommandprotocol.commands import Command
+from serialcommandprotocol.primitive import Primitive
 
 INPUT = 0x0
 OUTPUT = 0x1
@@ -20,10 +18,10 @@ class ArduinoConnection:
         self.serial = serial
 
         # Команды этого устройства
-        self._pin_mode = Command(0x10, (Primitives.u8, Primitives.u8))
-        self._digital_write = Command(0x11, (Primitives.u8, Primitives.u8))
-        self._digital_read = Command(0x12, (Primitives.u8,))
-        self._delay_ms = Command(0x13, (Primitives.u32,))
+        self._pin_mode = Command(0x10, (Primitive.u8, Primitive.u8))
+        self._digital_write = Command(0x11, (Primitive.u8, Primitive.u8))
+        self._digital_read = Command(0x12, (Primitive.u8,))
+        self._delay_ms = Command(0x13, (Primitive.u32,))
 
     # Обёртки над командами ниже, чтобы сразу компилировать и отправлять их в порт
 
@@ -36,7 +34,7 @@ class ArduinoConnection:
     def digitalRead(self, pin: int) -> bool:
         self.serial.write(self._digital_read.pack(pin))  # Отправляем запрос для чтения пина
         response = self.serial.read()  # Ждём и получаем ответ (bytes)
-        return Primitives.u8.unpack(response)  # получаем распакованное значение
+        return Primitive.u8.unpack(response)  # получаем распакованное значение
 
     def delay(self, milliseconds: int) -> None:
         self.serial.write(self._delay_ms.pack(milliseconds))
@@ -61,19 +59,19 @@ def main() -> None:
     arduino.serial.close()
 
 
-def test() -> None:
-    from random import randint
-
-    cmd = Command(0x69, (Primitives.u8,))
-    h_cmd = CacheableCommand(0x69, (Primitives.u8,))
-
-    def rand():
-        return randint(0, 255)
-
-    pack_no_cache = timeit(lambda: cmd.pack(rand()))
-    pack_cached = timeit(lambda: h_cmd.pack(rand()))
-
-    print(f"{pack_no_cache=}\n{pack_cached=}\n({pack_no_cache / pack_cached})")
+# def test() -> None:
+#     from random import randint
+#
+#     cmd = Command(0x69, (Primitive.u8,))
+#     h_cmd = CacheableCommand(0x69, (Primitive.u8,))
+#
+#     def rand():
+#         return randint(0, 255)
+#
+#     pack_no_cache = timeit(lambda: cmd.pack(rand()))
+#     pack_cached = timeit(lambda: h_cmd.pack(rand()))
+#
+#     print(f"{pack_no_cache=}\n{pack_cached=}\n({pack_no_cache / pack_cached})")
 
 
 if __name__ == '__main__':
