@@ -1,5 +1,6 @@
 from enum import IntEnum
 from time import sleep
+from typing import Tuple
 
 from serial import Serial
 
@@ -27,16 +28,16 @@ class ArduinoProtocol(Protocol[ArduinoErrors]):
         self._digital_read = self.addCommand((Primitive.u8,))
         self._delay_ms = self.addCommand((Primitive.u32,))
 
-    def pinMode(self, pin: int, mode: int) -> tuple[ArduinoErrors, None]:
+    def pinMode(self, pin: int, mode: int) -> Tuple[ArduinoErrors, None]:
         return self._pin_mode.send(self.serial, pin, mode)
 
-    def digitalWrite(self, pin: int, state: bool | int) -> tuple[ArduinoErrors, None]:
+    def digitalWrite(self, pin: int, state: bool | int) -> Tuple[ArduinoErrors, None]:
         return self._pin_mode.send(self.serial, pin, state)
 
-    def digitalRead(self, pin: int) -> tuple[ArduinoErrors, bool | None]:
+    def digitalRead(self, pin: int) -> Tuple[ArduinoErrors, bool | None]:
         return self._digital_read.send(self.serial, pin)
 
-    def delay(self, milliseconds: int) -> tuple[ArduinoErrors, None]:
+    def delay(self, milliseconds: int) -> Tuple[ArduinoErrors, None]:
         return self._delay_ms.send(self.serial, milliseconds)
 
 
