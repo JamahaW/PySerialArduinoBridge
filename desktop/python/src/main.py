@@ -1,50 +1,53 @@
+from enum import IntEnum
 from time import sleep
 
 from serial import Serial
 
-from serialcommandprotocol.commands import Command
+from serialcommandprotocol.commands import Result
 from serialcommandprotocol.primitive import Primitive
-
-INPUT = 0x0
-OUTPUT = 0x1
-INPUT_PULLUP = 0x2
-LED_BUILTIN = 13
+from serialcommandprotocol.protocol import Protocol
 
 
-class ArduinoConnection:
+class ArduinoErrors(IntEnum):
+    OK = 0
+    FAIL = 1
+
+
+class ArduinoProtocol(Protocol[ArduinoErrors]):
     """Пример подключения к Arduino с минимальным набором команд"""
 
     def __init__(self, serial: Serial) -> None:
+        super().__init__(Primitive.u8, Result(ArduinoErrors, ArduinoErrors.OK, Primitive.u8))
+
         self.serial = serial
 
         # Команды этого устройства
-        self._pin_mode = Command(0x10, (Primitive.u8, Primitive.u8))
-        self._digital_write = Command(0x11, (Primitive.u8, Primitive.u8))
-        self._digital_read = Command(0x12, (Primitive.u8,))
-        self._delay_ms = Command(0x13, (Primitive.u32,))
+        self._pin_mode = self.addCommand((Primitive.u8, Primitive.u8))
+        self._digital_write = self.addCommand((Primitive.u8, Primitive.u8))
+        self._digital_read = self.addCommand((Primitive.u8,))
+        self._delay_ms = self.addCommand((Primitive.u32,))
 
-    # Обёртки над командами ниже, чтобы сразу компилировать и отправлять их в порт
+    def pinMode(self, pin: int, mode: int) -> tuple[ArduinoErrors, None]:
+        return self._pin_mode.send(self.serial, pin, mode)
 
-    def pinMode(self, pin: int, mode: int) -> None:
-        self.serial.write(self._pin_mode.pack(pin, mode))
+    def digitalWrite(self, pin: int, state: bool | int) -> tuple[ArduinoErrors, None]:
+        return self._pin_mode.send(self.serial, pin, state)
 
-    def digitalWrite(self, pin: int, state: bool | int) -> None:
-        self.serial.write(self._digital_write.pack(pin, state))
+    def digitalRead(self, pin: int) -> tuple[ArduinoErrors, bool | None]:
+        return self._digital_read.send(self.serial, pin)
 
-    def digitalRead(self, pin: int) -> bool:
-        self.serial.write(self._digital_read.pack(pin))  # Отправляем запрос для чтения пина
-        response = self.serial.read()  # Ждём и получаем ответ (bytes)
-        return Primitive.u8.unpack(response)  # получаем распакованное значение
-
-    def delay(self, milliseconds: int) -> None:
-        self.serial.write(self._delay_ms.pack(milliseconds))
-        # Код будет спать вместе с Arduino
-        sleep(0.001 * milliseconds)
+    def delay(self, milliseconds: int) -> tuple[ArduinoErrors, None]:
+        return self._delay_ms.send(self.serial, milliseconds)
 
 
 def main() -> None:
+    INPUT = 0x0
+    OUTPUT = 0x1
+    INPUT_PULLUP = 0x2
+    LED_BUILTIN = 13
+
     # Подключение к Arduino, скорость повышенная
-    arduino = ArduinoConnection(Serial("COM10", 115200))
+    arduino = ArduinoProtocol(Serial("COM10", 115200))
 
     # Ожидание пока вся инициализация slave платы пройдёт ...
     sleep(2)
@@ -59,21 +62,5 @@ def main() -> None:
     arduino.serial.close()
 
 
-# def test() -> None:
-#     from random import randint
-#
-#     cmd = Command(0x69, (Primitive.u8,))
-#     h_cmd = CacheableCommand(0x69, (Primitive.u8,))
-#
-#     def rand():
-#         return randint(0, 255)
-#
-#     pack_no_cache = timeit(lambda: cmd.pack(rand()))
-#     pack_cached = timeit(lambda: h_cmd.pack(rand()))
-#
-#     print(f"{pack_no_cache=}\n{pack_cached=}\n({pack_no_cache / pack_cached})")
-
-
 if __name__ == '__main__':
     main()
-    # test()

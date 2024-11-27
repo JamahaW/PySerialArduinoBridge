@@ -17,7 +17,7 @@ class Protocol[ResultType: IntEnum]:
         self._result = result
         self._commands = list[Command[ResultType, ResultType]]()
 
-    def addCommand[ReturnType](self, signature: Optional[Sequence[Primitive]], return_type: Optional[Primitive]) -> Command[ReturnType, ResultType]:
+    def addCommand[ReturnType](self, signature: Optional[Sequence[Primitive]], return_type: Optional[Primitive] = None) -> Command[ReturnType, ResultType]:
         command = Command[ReturnType, ResultType](
             self._result,
             self._command_code_primitive.pack(self._current_command_code),

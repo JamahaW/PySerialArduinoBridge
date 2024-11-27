@@ -72,10 +72,8 @@ if __name__ == '__main__':
         OK = 0x00
 
 
-    result = Result(ExampleResult, ExampleResult.OK, Primitive.u8)
-
     print(Command(
-        result,
+        Result(ExampleResult, ExampleResult.OK, Primitive.u8),
         Primitive.u8.pack(0x69),
         (Primitive.u8, Primitive.f32),
         Primitive.u32
