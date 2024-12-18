@@ -1,35 +1,53 @@
+"""
+Команда
+"""
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Optional
 from typing import Sequence
-from typing import Tuple
 from typing import Type
 
 from serial.serialutil import SerialBase
 
-from serialcommandprotocol.primitive import Primitive
+from serialcommandprotocol.primitives import Primitive
+from serialcommandprotocol.primitives import f32
+from serialcommandprotocol.primitives import u32
+from serialcommandprotocol.primitives import u8
 
 
 @dataclass(frozen=True)
-class Result[T: IntEnum]:
+class ReadHelper[T: IntEnum]:
     enum_type: Type[T]
     ok_code: T
     primitive_type: Primitive
 
     def read(self, serial: SerialBase) -> T:
-        return self.enum_type(self.primitive_type.unpack(serial.read(self.primitive_type.getSizeBytes())))
+        """Считать данные"""
+        return self.enum_type(self.primitive_type.unpack(serial.read(self.primitive_type.getSize())))
 
     def __repr__(self) -> str:
         return f"{self.enum_type.__name__}<{self.primitive_type}>"
 
 
 @dataclass(frozen=True)
-class Command[ReturnType: (int, bool, float), ResultType: IntEnum]:
-    """
-    Команда, отсылаемая в порт
-    """
+class Result[Error: IntEnum, Value]:
+    value: Optional[Value]
+    error: Error
 
-    result: Result[ResultType]
+    def unwrap(self, expect: str = "") -> Value:
+        """Panic или значение"""
+        if self.value is None:
+            raise ValueError(expect)
+
+        return self.value
+
+
+@dataclass(frozen=True)
+class Command[ReturnType: (int, bool, float), ErrorType: IntEnum]:
+    """Команда, отсылаемая в порт"""
+
+    result: ReadHelper[ErrorType]
     code: bytes
     signature: Optional[Sequence[Primitive]]
     return_type: Optional[Primitive]
@@ -38,7 +56,6 @@ class Command[ReturnType: (int, bool, float), ResultType: IntEnum]:
         """
         Скомпилировать команду в набор байт
         :param args: аргументы команды. (Их столько же, и такого же типа, что и сигнатура команды)
-        :return:
         """
         if self.signature is None:
             return self.code
@@ -48,14 +65,14 @@ class Command[ReturnType: (int, bool, float), ResultType: IntEnum]:
     def unpack(self, buffer: bytes) -> ReturnType:
         return self.return_type.unpack(buffer)
 
-    def send(self, serial: SerialBase, *args) -> Tuple[ResultType, Optional[ReturnType]]:
+    def send(self, serial: SerialBase, *args) -> Result:
         serial.write(self.pack(args))
         result_code = self.result.read(serial)
 
         if result_code != self.result.ok_code or self.return_type is None:
-            return result_code, None
+            return Result[ReturnType, ErrorType](result_code, None)
 
-        return result_code, self.unpack(serial.read(self.return_type.getSizeBytes()))
+        return Result[ReturnType, ErrorType](result_code, self.unpack(serial.read(self.return_type.getSize())))
 
     def __getSignatureString(self) -> str:
         return "" if self.signature is None else ", ".join(map(str, self.signature))
@@ -73,8 +90,6 @@ if __name__ == '__main__':
 
 
     print(Command(
-        Result(ExampleResult, ExampleResult.OK, Primitive.u8),
-        Primitive.u8.pack(0x69),
-        (Primitive.u8, Primitive.f32),
-        Primitive.u32
+        ReadHelper(ExampleResult, ExampleResult.OK, u8),
+        u8.pack(0x69), (u8, f32), u32
     ))

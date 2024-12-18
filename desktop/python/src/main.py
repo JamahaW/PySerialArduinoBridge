@@ -4,8 +4,8 @@ from typing import Tuple
 
 from serial import Serial
 
-from serialcommandprotocol.commands import Result
-from serialcommandprotocol.primitive import Primitive
+from serialcommandprotocol.commands import ReadHelper
+from serialcommandprotocol.primitives import Primitive
 from serialcommandprotocol.protocol import Protocol
 
 
@@ -18,7 +18,7 @@ class ArduinoProtocol(Protocol[ArduinoErrors]):
     """Пример подключения к Arduino с минимальным набором команд"""
 
     def __init__(self, serial: Serial) -> None:
-        super().__init__(Primitive.u8, Result(ArduinoErrors, ArduinoErrors.OK, Primitive.u8))
+        super().__init__(Primitive.u8, ReadHelper(ArduinoErrors, ArduinoErrors.OK, Primitive.u8))
 
         self.serial = serial
 
