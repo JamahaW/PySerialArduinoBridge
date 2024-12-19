@@ -80,7 +80,7 @@ class Binary[T](ABC):
 
     def getFormat(self) -> str:
         """Получить спецификатор формата"""
-        return self._struct.format.strip("<").strip(">")
+        return self._struct.format.strip("<>")
 
 
 class Primitive[T: (int | float | bool)](Binary[T]):
