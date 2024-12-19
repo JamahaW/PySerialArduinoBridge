@@ -7,11 +7,7 @@ from abc import abstractmethod
 from itertools import chain
 from typing import Final
 from typing import Iterable
-from typing import NamedTuple
 from typing import Sequence
-from typing import Type
-from typing import TypedDict
-from typing import get_type_hints
 
 
 class _Format:
@@ -100,71 +96,21 @@ class Primitive[T: (int | float | bool)](Binary[T]):
         return f"{_Format.matchPrefix(self.getFormat())}{self.getSize() * 8}"
 
 
-class Struct[T: TypedDict](Binary[T]):
+class Struct(Binary[tuple]):
     """Объединение нескольких примитивов"""
 
     def __init__(self, fields: Sequence[Primitive]) -> None:
         super().__init__(''.join(map(lambda f: f.getFormat(), fields)))
         self._fields = fields
 
-    def unpack(self, buffer: bytes) -> T:
+    def unpack(self, buffer: bytes) -> tuple:
         return self._struct.unpack(buffer)
 
-    def pack(self, fields: T) -> bytes:
+    def pack(self, fields: tuple) -> bytes:
         return self._struct.pack(*fields)
 
     def __str__(self) -> str:
         return f"{{{', '.join(map(str, self._fields))}}}"
-
-
-class Struct2[T: NamedTuple](Binary[T]):
-    """Объединение нескольких примитивов для работы с NamedTuple."""
-
-    def __init__(self, cls: type[T]) -> None:
-        """
-        cls: NamedTuple, описывающий структуру.
-        """
-        if not issubclass(cls, NamedTuple):
-            raise TypeError(f"{cls.__name__} должен быть подклассом NamedTuple.")
-
-        self.cls = cls
-
-        self._fields = self._create_primitives(cls)
-
-        super().__init__(''.join(field.getFormat() for field in self._fields))
-
-    @staticmethod
-    def _check_primitive(name: str, p: Primitive) -> Primitive:
-        if not isinstance(p, Primitive):
-            raise ValueError(f"Тип {p} не поддерживается для {name}")
-
-        return p
-
-    def _create_primitives(self, cls: type[T]) -> Sequence[Primitive]:
-        """Создает список примитивов на основе аннотаций NamedTuple."""
-        return [
-            self._check_primitive(name, _type)
-            for name, _type in get_type_hints(cls).items()
-        ]
-
-    def pack(self, value: T) -> bytes:
-        """Упаковывает экземпляр NamedTuple в байты."""
-        if not isinstance(value, self.cls):
-            raise TypeError(f"Ожидался объект типа {self.cls.__name__}, получен {type(value).__name__}")
-
-        # Используем _fields из NamedTuple
-        # noinspection PyProtectedMember
-        values = tuple(getattr(value, field) for field in self.cls._fields)
-        return self._struct.pack(*values)
-
-    def unpack(self, buffer: bytes) -> T:
-        """Распаковывает байты в экземпляр NamedTuple."""
-        return self.cls(*(self._struct.unpack(buffer)))
-
-    @classmethod
-    def from_namedtuple(cls, namedtuple_cls: Type[T]):
-        """Создаёт Struct на основе NamedTuple."""
-        return cls(namedtuple_cls)
 
 
 u8 = Primitive[int | bool](_Format.U8)
@@ -182,26 +128,13 @@ f64 = Primitive[float](_Format.F64)
 
 
 def _test():
+    s = Struct((u32, u16, u8))
+    s.pack((1, 2, 3))
 
-    class MyStruct(NamedTuple):
-        a: u32
-        b: u16
-        c: u8
+    print(s)
 
-    s = Struct2(MyStruct)
-
-    v = bytes((0xA4, 0xA3, 0xA2, 0xA1, 0xB2, 0xB1, 0x69,))
-    r = s.unpack(v)
+    r = s.unpack(bytes((0xA4, 0xA3, 0xA2, 0xA1, 0xB2, 0xB1, 0x69,)))  # r: tuple[int, int, int]
     print(r)
-
-    # print(f"{s=!s}")
-    #
-    #
-    # m = s.unpack(v)
-    # print(", ".join(map(hex, m)))
-    # v1 = s.pack(m)
-    #
-    # print(", ".join(map(hex, v1)))
 
 
 if __name__ == '__main__':
