@@ -1,10 +1,9 @@
-"""Абстрактный стрим ввода-вывода"""
 from abc import ABC
 from abc import abstractmethod
 
 
 class Stream(ABC):
-    """IO"""
+    """Абстрактный стрим ввода-вывода"""
 
     @abstractmethod
     def write(self, data: bytes) -> None:

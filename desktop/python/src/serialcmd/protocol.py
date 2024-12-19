@@ -1,4 +1,3 @@
-"""Протокол"""
 from typing import Optional
 
 from serialcmd.command import Command

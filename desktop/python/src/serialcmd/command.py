@@ -1,16 +1,16 @@
-"""Команда"""
 from dataclasses import dataclass
-from enum import IntEnum
 from typing import Optional
 
+from serialcmd.errorenum import ErrorEnum
+from serialcmd.respond import RespondPolicy
 from serialcmd.result import Result
 from serialcmd.serializers import Serializable
 from serialcmd.serializers import Serializer
 from serialcmd.stream import Stream
 
 
-@dataclass
-class Command[S: Serializable, R: Serializable, E: IntEnum]:
+@dataclass(frozen=True)
+class Command[S: Serializable, R: Serializable, E: ErrorEnum]:
     """Команда"""
 
     code: bytes
@@ -21,23 +21,46 @@ class Command[S: Serializable, R: Serializable, E: IntEnum]:
     """Возвращаемое значение"""
     name: str
     """Имя команды для отладки"""
-
-    def pack(self, value: S) -> bytes:
-        """Компилировать команду в байты"""
-        if self.signature is None:
-            return self.code
-
-        return self.code + self.signature.pack(value)
+    respond_policy: RespondPolicy[E]
+    """Обработчик ответа"""
 
     def send(self, stream: Stream, value: S) -> Result[R, E]:
         """Отправить команду в поток"""
+        stream.write(self.code)
 
-        stream.write(self.pack(value))
+        if self.signature is not None:
+            self.signature.write(stream, value)
 
-        n = NotImplemented
+        return self.respond_policy.process(stream, self.returns)
 
-        respond = stream.read(n)
+    def __str__(self) -> str:
+        return f"{self.name}<{self.code.hex().upper()}>({self.signature}) -> {self.respond_policy.toStr(self.returns)}"
 
-        returns = stream.read(self.returns.getSize())
 
-        return Result.ok(self.returns.unpack(returns))
+def _test():
+    from serialcmd.serializers import Struct
+    from serialcmd.serializers import f64
+    from serialcmd.serializers import u32
+
+    from serialcmd.serializers import i8
+
+    class TestErr(ErrorEnum):
+        bad = 0x69
+        ok = 0x00
+
+        def getOk(self) -> ErrorEnum:
+            return self.ok
+
+    c = Command(
+        b"\xFF",
+        Struct((u32, f64)),
+        i8,
+        "test",
+        RespondPolicy(TestErr, u32)
+    )
+
+    print(c)
+
+
+if __name__ == '__main__':
+    _test()

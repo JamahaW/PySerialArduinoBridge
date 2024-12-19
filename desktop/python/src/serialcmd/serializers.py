@@ -1,6 +1,3 @@
-"""
-Примитивные типы
-"""
 import struct
 from abc import ABC
 from abc import abstractmethod
@@ -8,6 +5,8 @@ from itertools import chain
 from typing import Final
 from typing import Iterable
 from typing import Sequence
+
+from serialcmd.stream import Stream
 
 
 class _Format:
@@ -60,7 +59,13 @@ class _Format:
         raise ValueError(fmt)
 
 
-class Serializer[T](ABC):
+_Ser_primitive = int | float | bool
+_Ser_struct = tuple[_Ser_primitive, ...]
+Serializable = _Ser_primitive | _Ser_struct
+"""Serializable тип"""
+
+
+class Serializer[T: Serializable](ABC):
     """Serializer - упаковка, распаковка данных"""
 
     def __init__(self, _format: str) -> None:
@@ -74,6 +79,14 @@ class Serializer[T](ABC):
     def unpack(self, buffer: bytes) -> T:
         """Получить значение из соответствующего байтового представления"""
 
+    def write(self, stream: Stream, value: T) -> None:
+        """Записать значение в стрим"""
+        stream.write(self.pack(value))
+
+    def read(self, stream: Stream) -> T:
+        """Считать значение из стрима"""
+        return self.unpack(stream.read(self.getSize()))
+
     def getSize(self) -> int:
         """Получить размер данных в байтах"""
         return self._struct.size
@@ -81,13 +94,6 @@ class Serializer[T](ABC):
     def getFormat(self) -> str:
         """Получить спецификатор формата"""
         return self._struct.format.strip("<>")
-
-
-_Ser_primitive = int | float | bool
-_Ser_struct = tuple[_Ser_primitive, ...]
-Serializable = _Ser_primitive | _Ser_struct
-
-"""Serializable тип"""
 
 
 class Primitive[T: _Ser_primitive](Serializer[T]):
