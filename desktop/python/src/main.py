@@ -4,9 +4,9 @@ from typing import Tuple
 
 from serial import Serial
 
-from serialcmd.commands import ReadHelper
-from serialcmd.primitives import Primitive
-from serialcmd.protocol import Protocol
+from serialcmd.legacy.commands import ReadHelper
+from serialcmd.serializers import Primitive
+from serialcmd.legacy.protocol import Protocol
 
 
 class ArduinoErrors(IntEnum):

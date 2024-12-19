@@ -60,8 +60,8 @@ class _Format:
         raise ValueError(fmt)
 
 
-class Binary[T](ABC):
-    """Двоичные данные"""
+class Serializer[T](ABC):
+    """Serializer - упаковка, распаковка данных"""
 
     def __init__(self, _format: str) -> None:
         self._struct = struct.Struct(f"<{_format}")
@@ -83,7 +83,14 @@ class Binary[T](ABC):
         return self._struct.format.strip("<>")
 
 
-class Primitive[T: (int | float | bool)](Binary[T]):
+_Ser_primitive = int | float | bool
+_Ser_struct = tuple[_Ser_primitive, ...]
+Serializable = _Ser_primitive | _Ser_struct
+
+"""Serializable тип"""
+
+
+class Primitive[T: _Ser_primitive](Serializer[T]):
     """Примитивные типы"""
 
     def pack(self, value: T) -> bytes:
@@ -96,17 +103,17 @@ class Primitive[T: (int | float | bool)](Binary[T]):
         return f"{_Format.matchPrefix(self.getFormat())}{self.getSize() * 8}"
 
 
-class Struct(Binary[tuple]):
+class Struct(Serializer[_Ser_struct]):
     """Объединение нескольких примитивов"""
 
     def __init__(self, fields: Sequence[Primitive]) -> None:
         super().__init__(''.join(map(lambda f: f.getFormat(), fields)))
         self._fields = fields
 
-    def unpack(self, buffer: bytes) -> tuple:
+    def unpack(self, buffer: bytes) -> _Ser_struct:
         return self._struct.unpack(buffer)
 
-    def pack(self, fields: tuple) -> bytes:
+    def pack(self, fields: _Ser_struct) -> bytes:
         return self._struct.pack(*fields)
 
     def __str__(self) -> str:

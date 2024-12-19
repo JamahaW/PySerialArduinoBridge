@@ -10,10 +10,10 @@ from typing import Type
 
 from serial.serialutil import SerialBase
 
-from serialcmd.primitives import Primitive
-from serialcmd.primitives import f32
-from serialcmd.primitives import u32
-from serialcmd.primitives import u8
+from serialcmd.serializers import Primitive
+from serialcmd.serializers import f32
+from serialcmd.serializers import u32
+from serialcmd.serializers import u8
 
 
 @dataclass(frozen=True)

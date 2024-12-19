@@ -1,47 +1,21 @@
-from enum import IntEnum
-from typing import Final
-from typing import Iterable
+"""Протокол"""
 from typing import Optional
-from typing import Sequence
 
-from serialcmd.commands import Command
-from serialcmd.commands import ReadHelper
-from serialcmd.primitives import Primitive
+from serialcmd.command import Command
+from serialcmd.serializers import Serializer
 
 
-class Protocol[ResultType: IntEnum]:
+class Protocol:
+    """Протокол - набор команды для последовательной связи"""
 
-    def __init__(self, command_code_primitive: Primitive, result: ReadHelper[ResultType]) -> None:
-        self._command_code_primitive: Final[Primitive] = command_code_primitive
-        self._current_command_code = 0
-        self._result = result
-        self._commands = list[Command[ResultType, ResultType]]()
+    def __init__(self) -> None:
+        pass
 
-    def addCommand[ReturnType](self, signature: Optional[Sequence[Primitive]], return_type: Optional[Primitive] = None) -> Command[ReturnType, ResultType]:
-        command = Command[ReturnType, ResultType](
-            self._result,
-            self._command_code_primitive.pack(self._current_command_code),
-            signature,
-            return_type
-        )
-        self._commands.append(command)
-        self._current_command_code += 1
-        return command
-
-    def getCommands(self) -> Iterable[Command]:
-        return self._commands
-
-
-if __name__ == '__main__':
-    class ExampleResult(IntEnum):
-        OK = 0x00
-
-
-    protocol = Protocol(Primitive.u16, ReadHelper(ExampleResult, ExampleResult.OK, Primitive.u16))
-
-    protocol.addCommand((Primitive.u8, Primitive.u32), Primitive.u16)
-    protocol.addCommand(None, Primitive.f32)
-    protocol.addCommand(None, None)
-    protocol.addCommand((Primitive.u8,), None)
-
-    print("\n".join(map(str, protocol.getCommands())))
+    def addCommand(self, name: str, signature: Optional[Serializer], returns: Optional[Serializer]) -> Command:
+        """
+        Добавить команду
+        @param name Имя команды для отладки
+        @param signature: Сигнатура (типы) входных аргументов
+        @param returns: тип выходного значения
+        """
+        pass
