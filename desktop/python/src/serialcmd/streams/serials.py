@@ -11,8 +11,8 @@ from serialcmd.streams.abc import Stream
 class Serial(Stream):
     """Стрим по последовательному порту"""
 
-    _serial_port: SerialPort
-    """Объект последовательного порта"""
+    def __init__(self, port: str, baud: int) -> None:
+        self._serial_port = SerialPort(port=port, baudrate=baud)
 
     def read(self, size: int = 1) -> bytes:
         return self._serial_port.read(size)
@@ -35,6 +35,21 @@ class Serial(Stream):
 def _test():
     ports = Serial.getPorts()
     print(ports)
+
+    stream = Serial(ports[0], 115200)
+
+    buf = stream.read(7)
+
+    from serialcmd.serializers import Struct
+    from serialcmd.serializers import u8
+    from serialcmd.serializers import u16
+    from serialcmd.serializers import u32
+
+    print(buf)
+
+    a, b, c, = Struct((u32, u16, u8)).unpack(buf)
+
+    print(f"{a:X}, {b:X}, {c:X}")
 
     return
 
