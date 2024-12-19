@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from serialcmd.errorenum import ErrorEnum
-from serialcmd.result import Result
+from serialcmd.core.errorenum import ErrorEnum
+from serialcmd.core.result import Result
 from serialcmd.serializers import Primitive
 from serialcmd.serializers import Serializable
 from serialcmd.serializers import Serializer
-from serialcmd.stream import Stream
+from serialcmd.streams.abc import Stream
 
 
 @dataclass(frozen=True)
