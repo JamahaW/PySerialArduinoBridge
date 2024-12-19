@@ -1,7 +1,8 @@
-#include "serialcmd/StreamBinarySerializer.hpp"
+#include "serialcmd/StreamSerializer.hpp"
 #include <Arduino.h>
 
-serialcmd::StreamBinarySerializer serializer(Serial);
+
+serialcmd::StreamSerializer serializer(Serial);
 
 void setup() {
     Serial.begin(115200);
