@@ -6,7 +6,7 @@ from typing import Final
 from typing import Iterable
 from typing import Sequence
 
-from serialcmd.streams import Stream
+from serialcmd.streams.abc import Stream
 
 
 class _Format:
