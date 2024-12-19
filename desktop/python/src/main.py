@@ -2,12 +2,12 @@ from serialcmd.errorenum import ErrorEnum
 from serialcmd.protocol import Protocol
 
 
-class ArduinoErrors(ErrorEnum):
+class ArduinoError(ErrorEnum):
     ok = 0x00
     fail = 0x01
 
 
-class ArduinoProtocol(Protocol[ArduinoErrors]):
+class ArduinoProtocol(Protocol[ArduinoError]):
     """Пример подключения к Arduino с минимальным набором команд"""
 
     pass

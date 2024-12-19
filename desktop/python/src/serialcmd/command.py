@@ -9,7 +9,7 @@ from serialcmd.serializers import Serializer
 from serialcmd.stream import Stream
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Command[S: Serializable, R: Serializable, E: ErrorEnum]:
     """Команда"""
 
@@ -51,14 +51,7 @@ def _test():
         def getOk(self) -> ErrorEnum:
             return self.ok
 
-    c = Command(
-        b"\xFF",
-        Struct((u32, f64)),
-        i8,
-        "test",
-        RespondPolicy(TestErr, u32)
-    )
-
+    c = Command(b"\xFF", Struct((u32, f64)), i8, RespondPolicy(TestErr, u32), "test")
     print(c)
 
 

@@ -28,14 +28,7 @@ class Protocol[E: ErrorEnum]:
         @param signature: Сигнатура (типы) входных аргументов
         @param returns: тип выходного значения
         """
-        ret = Command(
-            code=self._getNextCommandCode(),
-            signature=signature,
-            returns=returns,
-            respond_policy=self._respond_policy,
-            name=name
-        )
-
+        ret = Command(self._getNextCommandCode(), signature, returns, self._respond_policy, name)
         self._commands.append(ret)
         return ret
 
