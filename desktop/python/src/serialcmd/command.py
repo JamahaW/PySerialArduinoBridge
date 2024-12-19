@@ -9,7 +9,7 @@ from serialcmd.serializers import Serializer
 from serialcmd.stream import Stream
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Command[S: Serializable, R: Serializable, E: ErrorEnum]:
     """Команда"""
 
@@ -19,10 +19,10 @@ class Command[S: Serializable, R: Serializable, E: ErrorEnum]:
     """Входные аргументы"""
     returns: Optional[Serializer[R]]
     """Возвращаемое значение"""
-    name: str
-    """Имя команды для отладки"""
     respond_policy: RespondPolicy[E]
     """Обработчик ответа"""
+    name: str
+    """Имя команды для отладки"""
 
     def send(self, stream: Stream, value: S) -> Result[R, E]:
         """Отправить команду в поток"""
