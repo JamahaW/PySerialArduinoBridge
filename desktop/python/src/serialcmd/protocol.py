@@ -4,9 +4,9 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 
-from serialcommandprotocol.commands import Command
-from serialcommandprotocol.commands import ReadHelper
-from serialcommandprotocol.primitives import Primitive
+from serialcmd.commands import Command
+from serialcmd.commands import ReadHelper
+from serialcmd.primitives import Primitive
 
 
 class Protocol[ResultType: IntEnum]:
