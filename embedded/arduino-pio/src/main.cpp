@@ -7,7 +7,7 @@ serialcmd::StreamSerializer serializer(Serial);
 void setup() {
     Serial.begin(115200);
 
-    struct Foo {
+    struct {
         uint32_t a;
         uint16_t b;
         uint8_t c;
