@@ -1,4 +1,4 @@
-from serialcmd.core.errorenum import ErrorEnum
+from serialcmd.errorenum import ErrorEnum
 from serialcmd.protocol import Protocol
 
 

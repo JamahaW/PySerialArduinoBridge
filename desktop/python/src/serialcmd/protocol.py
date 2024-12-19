@@ -1,9 +1,9 @@
 from typing import Iterable
 from typing import Optional
 
-from serialcmd.command import Command
-from serialcmd.core.errorenum import ErrorEnum
-from serialcmd.respond import RespondPolicy
+from serialcmd.core.command import Command
+from serialcmd.errorenum import ErrorEnum
+from serialcmd.core.respond import RespondPolicy
 from serialcmd.serializers import Primitive
 from serialcmd.serializers import Serializable
 from serialcmd.serializers import Serializer

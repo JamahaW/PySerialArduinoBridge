@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from serialcmd.core.errorenum import ErrorEnum
+from serialcmd.errorenum import ErrorEnum
 from serialcmd.core.result import Result
-from serialcmd.respond import RespondPolicy
+from serialcmd.core.respond import RespondPolicy
 from serialcmd.serializers import Serializable
 from serialcmd.serializers import Serializer
 from serialcmd.streams.abc import Stream
