@@ -8,12 +8,12 @@ class Result[U, E]:
     """Результат"""
 
     _value: U = None
-    _error: E = None
+    error: E = None
 
     @classmethod
     def err(cls, error: E) -> Result:
         """Создать результат ошибки"""
-        return cls(_error=error)
+        return cls(error=error)
 
     @classmethod
     def ok(cls, value: U) -> Result:
@@ -22,7 +22,7 @@ class Result[U, E]:
 
     def isErr(self) -> bool:
         """Является ли ошибкой"""
-        return self._error is not None
+        return self.error is not None
 
     def isOk(self) -> bool:
         """Является ли значением"""
@@ -34,6 +34,6 @@ class Result[U, E]:
             return self._value
 
         elif default is None:
-            raise ValueError(f"{self} is Error")
+            raise ValueError(f"Cannot unwrap an error Result. Error: {self.error}")
 
         return default
