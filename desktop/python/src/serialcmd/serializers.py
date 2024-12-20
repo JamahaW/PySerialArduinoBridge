@@ -61,7 +61,7 @@ class _Format:
 
 _Ser_primitive = int | float | bool
 _Ser_struct = tuple[_Ser_primitive, ...]
-Serializable = _Ser_primitive | _Ser_struct
+Serializable = _Ser_primitive | _Ser_struct | None
 """Serializable тип"""
 
 

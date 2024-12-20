@@ -19,6 +19,9 @@ class MockStream(Stream):
     def read(self, size: int = 1) -> bytes:
         return self.input.read(size)
 
+    def __str__(self) -> str:
+        return f"MockStream@{id(self):x}"
+
 
 def _test():
     from io import BytesIO
