@@ -11,57 +11,55 @@ namespace cmd {
 
 
     /// pinMode<00>({u8, u8}) -> (None, ArduinoError<u8>)
-    Error pin_mode(StreamSerializer &serializer) {
+    void pin_mode(StreamSerializer &serializer) {
         struct { serialcmd::u8 pin, mode; } data{};
         serializer.read(data);
 
         pinMode(data.pin, data.mode);
 
-        return Error::ok;
+        serializer.write(Error::ok);
     }
 
     /// digitalWrite<01>({u8, u8}) -> (None, ArduinoError<u8>)
-    Error digital_write(StreamSerializer &serializer) {
+    void digital_write(StreamSerializer &serializer) {
         struct { serialcmd::u8 pin, state; } data{};
         serializer.read(data);
 
         digitalWrite(data.pin, data.state);
 
-        return Error::ok;
+        serializer.write(Error::ok);
     }
 
     /// digitalRead<02>(u8) -> (u8, ArduinoError<u8>)
-    Error digital_read(StreamSerializer &serializer) {
+    void digital_read(StreamSerializer &serializer) {
         serialcmd::u8 pin;
         serializer.read(pin);
 
-        serialcmd::u8 ret;
-        ret = digitalRead(pin);
+        serializer.write(Error::ok);
 
+        serialcmd::u8 ret = digitalRead(pin);
         serializer.write(ret);
-
-        return Error::ok;
     }
 
     /// millis<03>(None) -> (u32, ArduinoError<u8>)
-    Error millis(StreamSerializer &serializer) {
+    void millis(StreamSerializer &serializer) {
         serialcmd::u32 ret = ::millis();
-        serializer.write(ret);
 
-        return Error::ok;
+        serializer.write(Error::ok);
+        serializer.write(ret);
     }
 
     /// delay<04>(u32) -> (None, ArduinoError<u8>)
-    Error delay(StreamSerializer &serializer) {
+    void delay(StreamSerializer &serializer) {
         serialcmd::u32 v;
         serializer.read(v);
 
         ::delay(v);
 
-        return Error::ok;
+        serializer.write(Error::ok);
     }
 
-    typedef Error(*Cmd)(StreamSerializer &);
+    typedef void(*Cmd)(StreamSerializer &);
 
     Cmd commands[] = {
         pin_mode,
@@ -73,11 +71,7 @@ namespace cmd {
 }
 
 
-serialcmd::Protocol<uint8_t, uint8_t> protocol(
-    cmd::commands,
-    5,
-    Serial
-);
+serialcmd::Protocol<uint8_t, uint8_t> protocol(cmd::commands, 5, Serial);
 
 void setup() {
     Serial.begin(115200);
