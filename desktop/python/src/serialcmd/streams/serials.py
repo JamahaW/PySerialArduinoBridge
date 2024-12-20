@@ -31,6 +31,9 @@ class Serial(Stream):
             if any(keyword in port.description for keyword in keywords)
         ]
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}<{self._serial_port.port}>"
+
 
 def _test():
     ports = Serial.getPorts()

@@ -12,12 +12,15 @@ def _launch() -> str:
         return "Нет доступных портов"
 
     arduino = ArduinoProtocol(Serial(ports[0], 115200))
+
+    print("\n".join(map(str, arduino.getCommands())))
+
     startup = arduino.begin()
 
-    print(f"Пакет ответа инициализации ведомого устройства: {startup=}")
+    if startup != 0x01:
+        return f"Недействительный код инициализации {startup=}"
 
-    if not startup:
-        return "Недействительный код инициализации"
+    print(f"Пакет ответа инициализации ведомого устройства: {startup=}")
 
     arduino.pinMode(LED_BUILTIN, OUTPUT)
 
