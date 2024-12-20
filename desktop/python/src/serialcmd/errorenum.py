@@ -6,6 +6,7 @@ from enum import IntEnum
 class ErrorEnum(IntEnum):
     """Перечисление ошибок"""
 
-    def getOk(self) -> ErrorEnum:
+    @classmethod
+    def getOk(cls) -> ErrorEnum:
         """Получить код успешного значения"""
-        return self.__class__(0)
+        return cls(0)

@@ -2,8 +2,9 @@ from typing import Iterable
 from typing import Optional
 
 from serialcmd.core.command import Command
-from serialcmd.errorenum import ErrorEnum
+from serialcmd.core.instruction import Instruction
 from serialcmd.core.respond import RespondPolicy
+from serialcmd.errorenum import ErrorEnum
 from serialcmd.serializers import Primitive
 from serialcmd.serializers import Serializable
 from serialcmd.serializers import Serializer
@@ -28,7 +29,7 @@ class Protocol[E: ErrorEnum]:
         @param signature: Сигнатура (типы) входных аргументов
         @param returns: тип выходного значения
         """
-        ret = Command(self._getNextCommandCode(), signature, returns, self._respond_policy, name)
+        ret = Command(Instruction(self._getNextCommandCode(), signature, name), returns, self._respond_policy)
         self._commands.append(ret)
         return ret
 

@@ -26,7 +26,7 @@ class Result[U, E]:
 
     def isOk(self) -> bool:
         """Является ли значением"""
-        return self._value is not None
+        return not self.isErr()
 
     def unwrap(self, default: U = None) -> U:
         """Получить значение или выйти с ошибкой"""
