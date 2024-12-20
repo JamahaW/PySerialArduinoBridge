@@ -9,11 +9,9 @@ namespace cmd {
     using serialcmd::Error;
     using serialcmd::StreamSerializer;
 
-    struct Device;
-
 
     /// pinMode<00>({u8, u8}) -> (None, ArduinoError<u8>)
-    Error pin_mode(Device &, StreamSerializer &serializer) {
+    Error pin_mode(StreamSerializer &serializer) {
         struct { serialcmd::u8 pin, mode; } data{};
         serializer.read(data);
 
@@ -23,7 +21,7 @@ namespace cmd {
     }
 
     /// digitalWrite<01>({u8, u8}) -> (None, ArduinoError<u8>)
-    Error digital_write(Device &, StreamSerializer &serializer) {
+    Error digital_write(StreamSerializer &serializer) {
         struct { serialcmd::u8 pin, state; } data{};
         serializer.read(data);
 
@@ -33,7 +31,7 @@ namespace cmd {
     }
 
     /// digitalRead<02>(u8) -> (u8, ArduinoError<u8>)
-    Error digital_read(Device &, StreamSerializer &serializer) {
+    Error digital_read(StreamSerializer &serializer) {
         serialcmd::u8 pin;
         serializer.read(pin);
 
@@ -46,7 +44,7 @@ namespace cmd {
     }
 
     /// millis<03>(None) -> (u32, ArduinoError<u8>)
-    Error millis(Device &, StreamSerializer &serializer) {
+    Error millis(StreamSerializer &serializer) {
         serialcmd::u32 ret = ::millis();
         serializer.write(ret);
 
@@ -54,7 +52,7 @@ namespace cmd {
     }
 
     /// delay<04>(u32) -> (None, ArduinoError<u8>)
-    Error delay(Device &, StreamSerializer &serializer) {
+    Error delay(StreamSerializer &serializer) {
         serialcmd::u32 v;
         serializer.read(v);
 
@@ -63,7 +61,7 @@ namespace cmd {
         return Error::ok;
     }
 
-    typedef Error(*Cmd)(Device &, StreamSerializer &);
+    typedef Error(*Cmd)(StreamSerializer &);
 
     Cmd commands[] = {
         pin_mode,
@@ -75,9 +73,9 @@ namespace cmd {
 }
 
 
-serialcmd::Protocol<cmd::Device, uint8_t, uint8_t> protocol(
+serialcmd::Protocol<uint8_t, uint8_t> protocol(
     cmd::commands,
-    4,
+    5,
     Serial
 );
 
