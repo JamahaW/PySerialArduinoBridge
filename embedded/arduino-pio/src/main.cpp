@@ -8,58 +8,78 @@
 namespace cmd {
     using serialcmd::StreamSerializer;
 
-    enum Error : char {
+    using serialcmd::u8;
+    using serialcmd::u32;
+
+    enum Result : serialcmd::u8 {
         ok = 0x00,
-        fail = 0x01
+        error = 0x01
     };
+
+    inline bool isDigitalPin(u8 pin) {
+        return pin < 14;
+    }
 
     /// pinMode<00>({u8, u8}) -> (None, ArduinoError<u8>)
     void pin_mode(StreamSerializer &serializer) {
-        struct { serialcmd::u8 pin, mode; } data{};
+        struct { u8 pin, mode; } data{};
         serializer.read(data);
 
         pinMode(data.pin, data.mode);
 
-        serializer.write(Error::ok);
+        serializer.write(Result::ok);
     }
 
     /// digitalWrite<01>({u8, u8}) -> (None, ArduinoError<u8>)
     void digital_write(StreamSerializer &serializer) {
-        struct { serialcmd::u8 pin, state; } data{};
-        serializer.read(data);
+        u8 pin;
+        serializer.read(pin);
 
-        digitalWrite(data.pin, data.state);
+        if (not isDigitalPin(pin)) {
+            serializer.write(Result::error);
+            return;
+        }
 
-        serializer.write(Error::ok);
+        u8 state;
+        serializer.read(state);
+
+        digitalWrite(pin, state);
+
+        serializer.write(Result::ok);
     }
 
     /// digitalRead<02>(u8) -> (u8, ArduinoError<u8>)
     void digital_read(StreamSerializer &serializer) {
-        serialcmd::u8 pin;
-        serializer.read(pin);
+        u8 v;
+        serializer.read(v);
 
-        serializer.write(Error::ok);
+        if (not isDigitalPin(v)) {
+            serializer.write(Result::error);
+            return;
+        }
 
-        serialcmd::u8 ret = digitalRead(pin);
-        serializer.write(ret);
+        serializer.write(Result::ok);
+
+        v = digitalRead(v);
+        serializer.write(v);
     }
 
     /// millis<03>(None) -> (u32, ArduinoError<u8>)
     void millis(StreamSerializer &serializer) {
-        serialcmd::u32 ret = ::millis();
+        u32 ret = ::millis();
 
-        serializer.write(Error::ok);
+        serializer.write(Result::ok);
         serializer.write(ret);
     }
 
     /// delay<04>(u32) -> (None, ArduinoError<u8>)
     void delay(StreamSerializer &serializer) {
-        serialcmd::u32 v;
+        u32 v;
         serializer.read(v);
 
         ::delay(v);
 
-        serializer.write(Error::ok);
+        serializer.write(Result::ok);
     }
 
     typedef void(*Cmd)(StreamSerializer &);

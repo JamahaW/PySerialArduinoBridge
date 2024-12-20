@@ -35,9 +35,9 @@ class ArduinoProtocol(Protocol[ArduinoError, bool]):
         """Установить режим пина"""
         return self._pin_mode.send((pin, mode))
 
-    def digitalWrite(self, pin: int, mode: bool) -> Result[None, ArduinoError]:
+    def digitalWrite(self, pin: int, state: bool) -> Result[None, ArduinoError]:
         """Установить состояние пина"""
-        return self._digital_write.send((pin, mode))
+        return self._digital_write.send((pin, state))
 
     def digitalRead(self, pin: int) -> Result[int, ArduinoError]:
         """Считать состояние пина"""

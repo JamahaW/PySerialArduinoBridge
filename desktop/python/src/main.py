@@ -1,6 +1,3 @@
-import timeit
-from typing import Callable
-
 from arduino import ArduinoProtocol
 from arduino import LED_BUILTIN
 from arduino import OUTPUT
@@ -29,23 +26,26 @@ def _launch() -> str:
 
     arduino.pinMode(LED_BUILTIN, OUTPUT)
 
-    def _blink():
-        arduino.digitalWrite(LED_BUILTIN, True)
-        arduino.digitalWrite(LED_BUILTIN, False)
+    print(f"{arduino.digitalWrite(LED_BUILTIN, True)=}")
+    # print(f"{arduino.digitalWrite(100, True)=}")
 
-    def _test():
-        # arduino.delay(500)
-
-        print(arduino.millis())
-
-        return
-
-    def calc(f: Callable[[], None], n: int = 1000) -> float:
-        return timeit.timeit(f, number=n) / n
-
-    # t = calc(_blink)
-    t = calc(_test, 10)
-    print(f"{t * 1000.0} ms ({1 / t})")
+    # def _blink():
+    #     arduino.digitalWrite(LED_BUILTIN, True)
+    #     arduino.digitalWrite(LED_BUILTIN, False)
+    #
+    # def _test():
+    #     # arduino.delay(500)
+    #
+    #     print(arduino.millis())
+    #
+    #     return
+    #
+    # def calc(f: Callable[[], None], n: int = 1000) -> float:
+    #     return timeit.timeit(f, number=n) / n
+    #
+    # # t = calc(_blink)
+    # t = calc(_test, 10)
+    # print(f"{t * 1000.0} ms ({1 / t})")
 
     return "Успешное завершение"
 
