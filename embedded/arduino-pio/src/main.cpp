@@ -6,9 +6,12 @@
 
 
 namespace cmd {
-    using serialcmd::Error;
     using serialcmd::StreamSerializer;
 
+    enum Error : char {
+        ok = 0x00,
+        fail = 0x01
+    };
 
     /// pinMode<00>({u8, u8}) -> (None, ArduinoError<u8>)
     void pin_mode(StreamSerializer &serializer) {
